@@ -45,24 +45,68 @@ class _ChatMobileState extends State<ChatMobile> {
         ChatBloc chatBloc = context.read<ChatBloc>();
         return Scaffold(
           appBar: AppBar(
-            leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.goNamed(RouteNames.recipient)),
+            backgroundColor: Theme.of(context).colorScheme.onSurface,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => context.goNamed(RouteNames.recipient),
+            ),
+            titleSpacing: 0,
             title: Row(
               children: [
-                CircleAvatar(
-                  backgroundImage: widget.recipient.avatarUrl != null ? NetworkImage(widget.recipient.avatarUrl!) : null,
-                  child: widget.recipient.avatarUrl == null ? Text(widget.recipient.name[0], style: Theme.of(context).textTheme.bodyLarge) : null,
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.amber[200],
+                      backgroundImage: widget.recipient.avatarUrl != null ? NetworkImage(widget.recipient.avatarUrl!) : null,
+                      child: widget.recipient.avatarUrl == null
+                          ? Text(widget.recipient.name[0], style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.black))
+                          : null,
+                    ),
+                    if (widget.recipient.isOnline)
+                      Positioned(
+                        bottom: 2,
+                        right: 2,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(widget.recipient.name),
-                    if (widget.recipient.isOnline) Text('Online', style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      widget.recipient.name,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      widget.recipient.isOnline ? 'Active now' : 'Offline',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w400),
+                    ),
                   ],
                 ),
               ],
             ),
-            actions: [IconButton(icon: const Icon(Icons.settings), onPressed: () {})],
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.call, color: Colors.white),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: const Icon(Icons.videocam, color: Colors.white),
+                onPressed: () {},
+              ),
+            ],
           ),
           body: Container(
             color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.2),
@@ -131,14 +175,26 @@ class _ChatMobileState extends State<ChatMobile> {
   void _showMessageOptions(ChatBloc chatBloc, Message message) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => BlocProvider.value(
         value: chatBloc,
-        child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Text('Message Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+              ),
               ListTile(
-                leading: const Icon(Icons.reply),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.reply, color: Colors.black87),
+                ),
                 title: const Text('Reply'),
                 onTap: () {
                   Navigator.pop(context);
@@ -146,7 +202,11 @@ class _ChatMobileState extends State<ChatMobile> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.forward),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.forward, color: Colors.black87),
+                ),
                 title: const Text('Forward'),
                 onTap: () {
                   Navigator.pop(context);
@@ -154,7 +214,11 @@ class _ChatMobileState extends State<ChatMobile> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.copy),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.copy, color: Colors.black87),
+                ),
                 title: const Text('Copy'),
                 onTap: () {
                   Navigator.pop(context);
@@ -163,7 +227,11 @@ class _ChatMobileState extends State<ChatMobile> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.delete, color: Colors.red),
+                ),
                 title: const Text('Delete', style: TextStyle(color: Colors.red)),
                 onTap: () {
                   Navigator.pop(context);

@@ -10,58 +10,44 @@ class ReplyPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMe = message.senderId == Constants.PREF_KEY_SENDER_ID;
+    final senderName = isMe ? 'You' : 'Sender';
+    final bgColor = isMe ? Colors.grey[200] : Colors.grey[100];
     return Container(
       margin: const EdgeInsets.all(8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(14)),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(_getMessageTypeIcon(message.type), color: Theme.of(context).colorScheme.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Replying to ${message.senderId == Constants.PREF_KEY_SENDER_ID ? 'yourself' : 'message'}',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const Spacer(),
-              IconButton(icon: const Icon(Icons.close), onPressed: onCancel, tooltip: 'Cancel reply'),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  senderName,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 2),
+                _buildMessagePreview(context, message),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(8)),
-            child: _buildMessagePreview(context, message),
+          const SizedBox(width: 8),
+          Align(
+            alignment: Alignment.topCenter,
+            child: IconButton(
+              icon: const Icon(Icons.close, size: 20, color: Colors.black54),
+              onPressed: onCancel,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              tooltip: 'Cancel reply',
+            ),
           ),
         ],
       ),
     );
-  }
-
-  IconData _getMessageTypeIcon(MessageType type) {
-    switch (type) {
-      case MessageType.text:
-        return Icons.message;
-      case MessageType.image:
-        return Icons.image;
-      case MessageType.video:
-        return Icons.video_file;
-      case MessageType.voice:
-        return Icons.mic;
-      case MessageType.document:
-        return Icons.insert_drive_file;
-      case MessageType.location:
-        return Icons.location_on;
-      case MessageType.contact:
-        return Icons.person;
-    }
   }
 
   Widget _buildMessagePreview(BuildContext context, Message message) {
@@ -114,6 +100,22 @@ class ReplyPreview extends StatelessWidget {
             Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
             Text(message.metadata?['name'] ?? 'Contact', style: Theme.of(context).textTheme.bodyMedium),
+          ],
+        );
+      case MessageType.emoji:
+        return Row(
+          children: [
+            Icon(Icons.emoji_emotions, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Text('Emoji', style: Theme.of(context).textTheme.bodyMedium),
+          ],
+        );
+      case MessageType.link:
+        return Row(
+          children: [
+            Icon(Icons.link, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Text('Link', style: Theme.of(context).textTheme.bodyMedium),
           ],
         );
     }

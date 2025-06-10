@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum MessageType { text, image, voice, video, document, location, contact }
+enum MessageType { text, image, emoji, link, voice, video, document, location, contact }
 
 enum MessageStatus { sending, sent, delivered, read }
 
@@ -15,6 +15,9 @@ class Message extends Equatable {
   final Map<String, dynamic>? metadata;
   final String? replyToId;
   final bool isStarred;
+  final bool isForwarded;
+  final bool isReply;
+  final List<String>? reactions;
 
   const Message({
     required this.id,
@@ -27,6 +30,9 @@ class Message extends Equatable {
     required this.isStarred,
     this.metadata,
     this.replyToId,
+    this.isForwarded = false,
+    this.isReply = false,
+    this.reactions,
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
@@ -41,6 +47,9 @@ class Message extends Equatable {
       metadata: json['metadata'] as Map<String, dynamic>?,
       replyToId: json['replyToId'] as String?,
       isStarred: json['isStarred'] as bool,
+      isForwarded: json['isForwarded'] as bool,
+      isReply: json['isReply'] as bool,
+      reactions: json['reactions'] as List<String>?,
     );
   }
 
@@ -56,6 +65,9 @@ class Message extends Equatable {
       'metadata': metadata,
       'replyToId': replyToId,
       'isStarred': isStarred,
+      'isForwarded': isForwarded,
+      'isReply': isReply,
+      'reactions': reactions ?? [],
     };
   }
 
@@ -70,6 +82,9 @@ class Message extends Equatable {
     Map<String, dynamic>? metadata,
     String? replyToId,
     bool? isStarred,
+    bool? isForwarded,
+    bool? isReply,
+    List<String>? reactions,
   }) {
     return Message(
       id: id ?? this.id,
@@ -82,9 +97,26 @@ class Message extends Equatable {
       metadata: metadata ?? this.metadata,
       replyToId: replyToId ?? this.replyToId,
       isStarred: isStarred ?? this.isStarred,
+      isForwarded: isForwarded ?? this.isForwarded,
+      isReply: isReply ?? this.isReply,
+      reactions: reactions ?? [],
     );
   }
 
   @override
-  List<Object?> get props => [id, senderId, receiverId, content, timestamp, type, status, replyToId, metadata];
+  List<Object?> get props => [
+    id,
+    senderId,
+    receiverId,
+    content,
+    timestamp,
+    type,
+    status,
+    replyToId,
+    metadata,
+    isStarred,
+    isForwarded,
+    isReply,
+    reactions,
+  ];
 }

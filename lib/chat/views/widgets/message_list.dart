@@ -32,6 +32,14 @@ class MessageList extends StatelessWidget {
 
   Widget _buildMessageItem(BuildContext context, Message message) {
     final isMe = message.senderId == Constants.PREF_KEY_SENDER_ID;
+    final bubbleColor = isMe ? const Color(0xFF23272F) : Colors.white;
+    final textColor = isMe ? Colors.white : Colors.black;
+    final borderRadius = BorderRadius.only(
+      topLeft: Radius.circular(isMe ? 16 : 4),
+      topRight: Radius.circular(isMe ? 4 : 16),
+      bottomLeft: const Radius.circular(16),
+      bottomRight: const Radius.circular(16),
+    );
 
     return GestureDetector(
       onTap: () => onMessageTap(message),
@@ -41,20 +49,52 @@ class MessageList extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Row(
           mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (!isMe) _buildAvatar(context),
             const SizedBox(width: 8),
             Flexible(
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isMe ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                  children: [_buildMessageContent(context, message), _buildMessageTimestamp(context, message)],
-                ),
+              child: Column(
+                crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                        decoration: BoxDecoration(color: bubbleColor, borderRadius: borderRadius),
+                        child: Column(
+                          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            _buildMessageContentCustom(context, message, isMe, textColor),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [_buildMessageTimestampCustom(context, message, isMe)],
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (message.isForwarded == true || message.isReply == true)
+                        Positioned(top: 6, right: 8, child: Icon(Icons.reply, size: 16, color: isMe ? Colors.white54 : Colors.black38)),
+                    ],
+                  ),
+                  if (message.reactions != null && message.reactions!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0, left: 8.0, right: 8.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: message.reactions!
+                            .map(
+                              (e) => Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                                child: Text(e, style: const TextStyle(fontSize: 20)),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(width: 8),
@@ -73,146 +113,114 @@ class MessageList extends StatelessWidget {
     );
   }
 
-  Widget _buildMessageTimestamp(BuildContext context, Message message) {
+  Widget _buildMessageTimestampCustom(BuildContext context, Message message, bool isMe) {
     CommonHelper commonHelper = CommonHelper();
-    return Wrap(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        message.isStarred
-            ? Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                child: Icon(Icons.star, size: 12, color: Theme.of(context).colorScheme.surface),
-              )
-            : SizedBox.shrink(),
+        if (message.isStarred)
+          Padding(
+            padding: const EdgeInsets.only(right: 3.0),
+            child: Icon(Icons.star, size: 13, color: isMe ? Colors.amber[300] : Colors.amber[700]),
+          ),
         Text(
           commonHelper.convertDateTimeToTime(message.timestamp.toLocal().toString()),
           textAlign: TextAlign.end,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.surface),
+          style: TextStyle(color: isMe ? Colors.white54 : Colors.black38, fontSize: 11),
         ),
       ],
     );
   }
 
-  Widget _buildMessageContent(BuildContext context, Message message) {
+  Widget _buildMessageContentCustom(BuildContext context, Message message, bool isMe, Color textColor) {
     switch (message.type) {
       case MessageType.text:
-        return Text(
-          message.content,
-          style: TextStyle(
-            color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                ? Theme.of(context).colorScheme.onPrimary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        );
+        return Text(message.content, style: TextStyle(fontSize: 16, color: textColor, height: 1.4));
       case MessageType.image:
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.file(File(message.content), width: 200, height: 200, fit: BoxFit.cover),
-        );
-      case MessageType.video:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.play_circle_filled,
-              color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                  ? Theme.of(context).colorScheme.onPrimary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              message.metadata?['fileName'] ?? 'Video',
-              style: TextStyle(
-                color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        );
-      case MessageType.voice:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.mic,
-              color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                  ? Theme.of(context).colorScheme.onPrimary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Voice message',
-              style: TextStyle(
-                color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(File(message.content), width: 220, height: 180, fit: BoxFit.cover),
         );
       case MessageType.document:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.insert_drive_file,
-              color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                  ? Theme.of(context).colorScheme.onPrimary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              message.metadata?['fileName'] ?? 'Document',
-              style: TextStyle(
-                color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
+        return Container(
+          width: 220,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: isMe ? Colors.white10 : Colors.grey[100], borderRadius: BorderRadius.circular(10)),
+          child: Row(
+            children: [
+              Icon(Icons.insert_drive_file, color: isMe ? Colors.white : Colors.black54, size: 32),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message.metadata?['fileName'] ?? 'Document',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+                    ),
+                    Text(message.metadata?['fileSize'] ?? '', style: TextStyle(fontSize: 12, color: textColor.withValues(alpha: 0.7))),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
-      case MessageType.location:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.location_on,
-              color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                  ? Theme.of(context).colorScheme.onPrimary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              message.metadata?['address'] ?? 'Location',
-              style: TextStyle(
-                color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
+      case MessageType.voice:
+        return Container(
+          width: 180,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(color: isMe ? Colors.white12 : Colors.grey[200], borderRadius: BorderRadius.circular(24)),
+          child: Row(
+            children: [
+              Icon(Icons.play_arrow, color: isMe ? Colors.white : Colors.black87),
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  height: 18,
+                  decoration: BoxDecoration(color: isMe ? Colors.white24 : Colors.grey[300], borderRadius: BorderRadius.circular(8)),
+                  // Placeholder for waveform
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(height: 4, margin: const EdgeInsets.symmetric(vertical: 7), color: isMe ? Colors.white54 : Colors.black26),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+              Text(message.metadata?['duration'] ?? '0:00', style: TextStyle(fontSize: 12, color: textColor)),
+            ],
+          ),
         );
-      case MessageType.contact:
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.person,
-              color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                  ? Theme.of(context).colorScheme.onPrimary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              message.metadata?['name'] ?? 'Contact',
-              style: TextStyle(
-                color: message.senderId == Constants.PREF_KEY_SENDER_ID
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
+      case MessageType.emoji:
+        return Center(child: Text(message.content, style: const TextStyle(fontSize: 32)));
+      case MessageType.link:
+        return Container(
+          width: 220,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: isMe ? Colors.white10 : Colors.grey[100], borderRadius: BorderRadius.circular(10)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (message.metadata?['imageUrl'] != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(message.metadata!['imageUrl'], height: 80, width: double.infinity, fit: BoxFit.cover),
+                ),
+              const SizedBox(height: 6),
+              Text(
+                message.metadata?['title'] ?? '',
+                style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(message.metadata?['description'] ?? '', style: TextStyle(fontSize: 13, color: textColor.withValues(alpha: 0.8))),
+              const SizedBox(height: 4),
+              Text(message.content, style: TextStyle(fontSize: 12, color: Colors.blue)),
+            ],
+          ),
         );
+      default:
+        return Text(message.content, style: TextStyle(fontSize: 16, color: textColor, height: 1.4));
     }
   }
 }

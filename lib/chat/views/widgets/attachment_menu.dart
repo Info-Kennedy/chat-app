@@ -43,44 +43,72 @@ class AttachmentMenu extends StatelessWidget {
           onContactSelected(state.contact);
         }
       },
-
       builder: (context, state) {
         return Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          padding: const EdgeInsets.only(top: 24, left: 0, right: 0, bottom: 16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)),
-              ),
-              GridView.count(
-                shrinkWrap: true,
-                crossAxisCount: 4,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              Row(
                 children: [
-                  _buildAttachmentOption(
-                    context,
-                    icon: Icons.insert_drive_file,
-                    label: 'Document',
-                    onTap: context.read<AttachmentCubit>().pickDocument,
+                  const SizedBox(width: 10),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.black),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                  _buildAttachmentOption(context, icon: Icons.photo, label: 'Gallery', onTap: context.read<AttachmentCubit>().pickImage),
-                  _buildAttachmentOption(context, icon: Icons.camera_alt, label: 'Camera', onTap: context.read<AttachmentCubit>().captureCamera),
-                  _buildAttachmentOption(
-                    context,
-                    icon: Icons.location_on,
-                    label: 'Location',
-                    onTap: context.read<AttachmentCubit>().sendCurrentLocation,
+                  Expanded(
+                    child: Center(
+                      child: Text('Share Content', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)),
+                    ),
                   ),
-                  _buildAttachmentOption(context, icon: Icons.contact_phone, label: 'Contact', onTap: context.read<AttachmentCubit>().pickContact),
+                  SizedBox(width: 48), // To balance the close icon
                 ],
+              ),
+              const SizedBox(height: 8),
+              _buildListOption(
+                context,
+                icon: Icons.camera_alt,
+                title: 'Camera',
+                subtitle: 'Take a photo',
+                onTap: context.read<AttachmentCubit>().captureCamera,
+              ),
+              _divider(),
+              _buildListOption(
+                context,
+                icon: Icons.insert_drive_file,
+                title: 'Documents',
+                subtitle: 'Share your files',
+                onTap: context.read<AttachmentCubit>().pickDocument,
+              ),
+              _divider(),
+              _buildListOption(context, icon: Icons.poll, title: 'Create a poll', subtitle: 'Create a poll for any querry', onTap: () {}),
+              _divider(),
+              _buildListOption(
+                context,
+                icon: Icons.photo,
+                title: 'Media',
+                subtitle: 'Share photos and videos',
+                onTap: context.read<AttachmentCubit>().pickImage,
+              ),
+              _divider(),
+              _buildListOption(
+                context,
+                icon: Icons.contact_phone,
+                title: 'Contact',
+                subtitle: 'Share your contacts',
+                onTap: context.read<AttachmentCubit>().pickContact,
+              ),
+              _divider(),
+              _buildListOption(
+                context,
+                icon: Icons.location_on,
+                title: 'Location',
+                subtitle: 'Share your location',
+                onTap: context.read<AttachmentCubit>().sendCurrentLocation,
               ),
             ],
           ),
@@ -89,21 +117,40 @@ class AttachmentMenu extends StatelessWidget {
     );
   }
 
-  Widget _buildAttachmentOption(BuildContext context, {required IconData icon, required String label, required VoidCallback onTap}) {
+  Widget _divider() => const Divider(height: 1, thickness: 0.5, indent: 16, endIndent: 16);
+
+  Widget _buildListOption(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer, borderRadius: BorderRadius.circular(16)),
-            child: Icon(icon, color: Theme.of(context).colorScheme.onPrimaryContainer, size: 28),
-          ),
-          const SizedBox(height: 8),
-          Text(label, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.12), shape: BoxShape.circle),
+              child: Icon(icon, color: Colors.black54, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54)),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
